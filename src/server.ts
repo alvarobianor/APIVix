@@ -1,13 +1,14 @@
+require('dotenv').config();
+require('./database');
+require('events').EventEmitter.prototype._maxListeners = 100;
 import express from 'express';
 import routes from './routes';
-import cors from 'cors';
+// import cors from 'cors';
 const app = express();
 
 app.use(express.json());
 
-app.use(cors);
+// app.use(cors);
 app.use(routes);
 
-app.get('/test', (req, res) => res.json({ message: 'foi' }));
-
-app.listen(3333, () => console.log('Entrou'));
+app.listen(3333, () => console.log('Entrou', process.env.PASSWORD));
