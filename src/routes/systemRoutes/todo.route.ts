@@ -7,31 +7,54 @@ const usersRouter = Router();
 // ROUTES
 
 usersRouter.post('/', async (req, res) => {
-	const data = new Date();
+	const { name, description, date } = req.body;
 
-	const str = '1/07/2021';
-	// data.setDate(34);
-	const [day, mounth, year] = str.split('/');
-	data.setFullYear(
-		year as unknown as number,
-		(mounth as unknown as number) - 1,
-		day as unknown as number,
-	);
+	if (!name || !description || !date) {
+		return res.status(400).json({ message: 'Something is broken' });
+	}
 
-	const Todo = new TodoModel({
-		name: 'Alvaro6',
-		formatedDate: `${day}/${mounth}/${year}`,
-		date: data,
-		description: 'Álvaro5',
+	const [day, mounth, year] = date.split('/');
+
+	const todo = new TodoModel({
+		name: name,
+		date: `${day}/${mounth}/${year}`,
+		description: description,
+		status: 'CONCLUIDA',
 	});
-	await Todo.save();
-	return res.json({ message: Todo });
+	await todo.save();
+	return res.status(201).json({ TODO: todo });
 });
 
 usersRouter.get('/all', async (req, res) => {
-	const all = await TodoModel.find().sort('-date');
+	const { filter } = req.query;
+	let all = {};
+	if (
+		filter === 'PENDENTE' ||
+		filter === 'CONCLUIDA' ||
+		filter === 'CANCELADA'
+	) {
+		all = await TodoModel.find({ status: filter }).sort('-createdAt');
+	} else {
+		all = await TodoModel.find().sort('-createdAt');
+	}
 
 	return res.status(200).send({ message: all });
+});
+
+usersRouter.put('/changeStatus', async (req, res) => {
+	const { id, status } = req.body;
+
+	if (!id || !status) {
+		return res.status(400).json({ message: 'Something is broken' });
+	}
+
+	const todo = await TodoModel.findOne({ _id: id });
+
+	todo.status = status;
+
+	await todo.save();
+
+	return res.status(201).json({ message: 'todo changed', TODO: todo });
 });
 
 export default usersRouter;
